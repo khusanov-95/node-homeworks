@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-   "startTaskOne": "nodemon homework1/index"
+   "startHomeWorkOne": "nodemon homework1/index", 
+   "startHomeWorkTwo": "nodemon homework2/index"
+  },
+  "bin": {
+    "startHomeWorkTwoCLI": "homework2/index.js"
   },
   "author": "",
   "license": "ISC",
