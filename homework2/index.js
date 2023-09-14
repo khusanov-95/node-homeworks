@@ -1,35 +1,54 @@
 #! /usr/bin/env node
 const childProcess = require('child_process');
+const fs = require('fs');
+const os = require('os');
 
-const isWindows = process.platform == 'win32';
+const logFile = "activityMonitor.log";
+const refreshRate = 100; // 10 times per second
+let lastLogTime = Date.now();
 
-const commands = isWindows ? {
-    command: `powershell "Get-Process | Sort-Object CPU -Descending | Select-Object -Property Name, CPU, WorkingSet -First 1 | ForEach-Object { $_.Name + ' ' + $_.CPU + ' ' + $_.WorkingSet }"`
-} : {
-    command: 'ps -A -o %cpu,%mem,comm | sort -nr | head -n 1'
+function getSystemCommand() {
+  switch (os.platform()) {
+    case "win32":
+      return "powershell \"Get-Process | Sort-Object CPU -Descending | Select-Object -Property Name, CPU, WorkingSet -First 1 | ForEach-Object { $_.Name + ' ' + $_.CPU + ' ' + $_.WorkingSet }\"";
+    case "linux":
+    case "darwin":
+    default:
+      return "ps -A -o %cpu,%mem,comm | sort -nr | head -n 1";
+  }
 }
 
-const hrtime = process.hrtime;
-console.log(hrtime)
-// const execProcess = (command, tsh) => {
-//     childProcess.exec(command.command).stdout.on('data', (data) => {
-//         const dataStr = Buffer.isBuffer(data) ? data.toString().replace('\r', '') : data;
-//         console.log(`${dataStr} Executed: ${Number(hrtime() - tsh) / 1e6 | 0} ms`);
-//     });
-//   }
-  
-// execProcess(commands, hrtime());
+function logToFile(data) {
+  const unixTime = Math.floor(Date.now() / 1000);
+  const logData = `${unixTime} : ${data}\n`;
+  fs.appendFile(logFile, logData, (err) => {
+    if (err) {
+      console.error("Error writing to log file:", err);
+    }
+  });
+}
 
+function displayProcessInfo() {
+  childProcess.exec(getSystemCommand(), (error, stdout, stderr) => {
+    if (error) {
+      console.error("Error executing command:", error);
+      return;
+    }
+    if (stderr) {
+      console.error("Error in command output:", stderr);
+      return;
+    }
 
-const execProcess = (command) => {
-    childProcess.exec(command, (error, stdout, stderr) => {
-      console.log(`stdout: ${stdout}`);
-      console.log(`stderr: ${stderr}`);
-  
-      if (error !== null) {
-        console.log(`error: ${error}`);
-      }
-    });
-  }
-  
-  execProcess(commands.command);
+    const processInfo = stdout.trim();
+    process.stdout.write(`\r${processInfo}`);
+
+    const currentTime = Date.now();
+    if (currentTime - lastLogTime >= 60000) {
+      logToFile(processInfo);
+      lastLogTime = currentTime;
+    }
+  });
+}
+
+setInterval(displayProcessInfo, refreshRate);
+
