@@ -2,13 +2,26 @@
   "name": "homeworks",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "homework3/csvConverter.js",
   "scripts": {
-   "startTaskOne": "nodemon homework1/index"
+    "build3": "babel homework3/csvConverter.js -d homework3/dist",
+    "startTaskOne": "nodemon homework1/index",
+    "startTaskThree": "nodemon homework3/index",
+    "startTaskThreeCSV": "npm run build3 && nodemon homework3/dist/csvConverter.js"
   },
   "author": "",
   "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.19.6",
+    "@babel/node": "^7.19.1",
+    "@babel/plugin-transform-runtime": "^7.19.6",
+    "@babel/preset-env": "^7.19.4",
+    "@babel/runtime": "^7.19.4",
+    "nodemon": "^2.0.20"
+  },
   "dependencies": {
-    "nodemon": "^3.0.1"
+    "csvtojson": "^2.0.10",
+    "node-fetch": "^3.3.2"
   }
 }
